@@ -146,7 +146,16 @@ function getConfigFromJenkins() {
     var user = match[2];
     var repo = match[3];
     var pr = match[4];
-    var commit = `git rev-parse HEAD`.trim(); // TODO: env var?
+    
+    var commit = `git rev-parse HEAD`.trim();
+    
+    // jenkins continuously integrates (get it?) PRs into their target branch. if it's 
+    // not a fast-forward merge, then HEAD will be referring to a commit that isn't yet 
+    // on github. we only want to comment on the PR commit that we're currently looking at.
+    var parents = `git log --pretty=%P -n 1`.trim().split(' ');
+    if (parents.length > 1) {
+        commit = parents[0];
+    }
 
     var token = $ENV['CHECKS_GITHUB_TOKEN'];
     // var apiUrl = baseUrl + "/api/v3/"; // TODO: this would be for ghe
